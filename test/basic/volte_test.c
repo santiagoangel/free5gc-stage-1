@@ -5,7 +5,7 @@
 #include <mongoc.h>
 
 #include "app/context.h"
-#include "mme/mme_context.h"
+#include "amf/amf4g_context.h"
 #include "s1ap/s1ap_message.h"
 
 #include "testutil.h"
@@ -96,7 +96,7 @@ static void volte_test1(abts_case *tc, void *data)
       "\"__v\" : 0"
     "}";
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -316,7 +316,7 @@ static void volte_test1(abts_case *tc, void *data)
 
     mongoc_collection_destroy(collection);
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -408,7 +408,7 @@ static void volte_test2(abts_case *tc, void *data)
       "\"__v\" : 0"
     "}";
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -573,7 +573,7 @@ static void volte_test2(abts_case *tc, void *data)
 
     mongoc_collection_destroy(collection);
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 

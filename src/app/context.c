@@ -225,6 +225,21 @@ status_t context_parse_config()
                             const char *v = yaml_iter_value(&trace_iter);
                             if (v) self.logger.trace.gtp = atoi(v);
                         }
+                        else if (!strcmp(trace_key, "pfcp"))
+                        {
+                            const char *v = yaml_iter_value(&trace_iter);
+                            if (v) self.logger.trace.pfcp = atoi(v);
+                        }
+                        else if (!strcmp(trace_key, "ngap"))
+                        {
+                            const char *v = yaml_iter_value(&trace_iter);
+                            if (v) self.logger.trace.ngap = atoi(v);
+                        }
+                        else if (!strcmp(trace_key, "sbi"))
+                        {
+                            const char *v = yaml_iter_value(&trace_iter);
+                            if (v) self.logger.trace.sbi = atoi(v);
+                        }
                         else
                             d_warn("unknown key `%s`", trace_key);
                     }
@@ -244,14 +259,14 @@ status_t context_parse_config()
                     self.parameter.no_hss =
                         yaml_iter_bool(&parameter_iter);
                 }
-                else if (!strcmp(parameter_key, "no_sgw"))
+                else if (!strcmp(parameter_key, "no_smf"))
                 {
-                    self.parameter.no_sgw =
+                    self.parameter.no_smf =
                         yaml_iter_bool(&parameter_iter);
                 }
-                else if (!strcmp(parameter_key, "no_pgw"))
+                else if (!strcmp(parameter_key, "no_upf"))
                 {
-                    self.parameter.no_pgw =
+                    self.parameter.no_upf =
                         yaml_iter_bool(&parameter_iter);
                 }
                 else if (!strcmp(parameter_key, "no_pcrf"))

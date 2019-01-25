@@ -8,7 +8,7 @@ dnl This program is distributed in the hope that it will be useful, but
 dnl WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
 dnl implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-AC_INIT([NextEPC], [0.3.9], [acetcom@gmail.com])
+AC_INIT([free5GC], [1.0.0], [nctuwirelab@gmail.com])
 
 AC_SUBST(LIBVERSION)
 LIBVERSION=1:0:0
@@ -47,8 +47,8 @@ AC_SUBST(IPFW_CPPFLAGS)
 AC_SUBST(LO_DEV)
 
 AH_TOP([
-#ifndef __NEXTEPC_CONFIG_H__
-#define __NEXTEPC_CONFIG_H__
+#ifndef __FREE5GC_CONFIG_H__
+#define __FREE5GC_CONFIG_H__
 /* need this, because some autoconf tests rely on this (e.g. stpcpy)
  * and it should be used for new programs  */
 #define _DEFAULT_SOURCE 1
@@ -56,7 +56,7 @@ AH_TOP([
 ])
 
 AH_BOTTOM([
-#endif /* __NEXTEPC_CONFIG_H__ */
+#endif /* __FREE5GC_CONFIG_H__ */
 ])
 
 AH_VERBATIM([_REENTRANT],
@@ -235,6 +235,7 @@ AC_CHECK_HEADERS( \
     string.h \
     strings.h \
     time.h \
+    math.h \
     unistd.h \
     net/if_dl.h \
     net/if.h \
@@ -371,6 +372,8 @@ if test "$ap_cv_atomic_builtins" = "yes"; then
     AC_DEFINE(HAVE_ATOMIC_BUILTINS, 1, [Define if compiler provides atomic builtins])
 fi
 
+AC_DEFINE(FIVE_G_CORE, 1, [This is 5GC])
+
 #######################################
 #### Checks for library functions. ####
 #######################################
@@ -388,6 +391,7 @@ AC_CHECK_FUNCS(\
     utime utimes sem_timedwait \
     pthread_yield sched_yield \
     getenv putenv setenv unsetenv \
+    ceil \
 )
 
 AC_SEARCH_LIBS(gethostbyname, nsl)
@@ -395,6 +399,7 @@ AC_SEARCH_LIBS(gethostname, nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(pthread_barrier_wait, pthread)
 AC_SEARCH_LIBS(gnutls_global_set_log_level, gnutls)
+AC_SEARCH_LIBS([ceil], [m]) # link math library
 
 AC_SEARCH_LIBS([sctp_sendmsg], [sctp], [have_sctp_lib=yes], [have_sctp_lib=no])
 if test x$have_sctp_lib == xno; then
@@ -417,56 +422,69 @@ AC_SUBST(FREEDIAMETER_DIR)
 #####################
 
 AC_CONFIG_SUBDIRS([lib/freeDiameter-1.2.1])
-
-AC_CONFIG_FILES([lib/core/include/core.h])
-AC_CONFIG_FILES([lib/core/src/Makefile])
-AC_CONFIG_FILES([lib/core/test/Makefile])
-AC_CONFIG_FILES([lib/core/Makefile])
-AC_CONFIG_FILES([lib/s1ap/asn1c/Makefile])
-AC_CONFIG_FILES([lib/s1ap/Makefile])
-AC_CONFIG_FILES([lib/nas/Makefile])
-AC_CONFIG_FILES([lib/fd/Makefile])
-AC_CONFIG_FILES([lib/gtp/Makefile])
 AC_CONFIG_FILES([lib/ipfw/Makefile])
+AC_CONFIG_FILES([lib/ngap/asn1c/Makefile])
+AC_CONFIG_FILES([lib/ngap/Makefile])
+AC_CONFIG_FILES([lib/pfcp/Makefile])
+AC_CONFIG_FILES([lib/cJSON/Makefile])
+AC_CONFIG_FILES([lib/sbiJson/Makefile])
+
+AC_CONFIG_FILES([lib/nextepc/core/include/core.h])
+AC_CONFIG_FILES([lib/nextepc/core/src/Makefile])
+AC_CONFIG_FILES([lib/nextepc/core/test/Makefile])
+AC_CONFIG_FILES([lib/nextepc/core/Makefile])
+AC_CONFIG_FILES([lib/nextepc/s1ap/asn1c/Makefile])
+AC_CONFIG_FILES([lib/nextepc/s1ap/Makefile])
+AC_CONFIG_FILES([lib/nextepc/nas/Makefile])
+AC_CONFIG_FILES([lib/nextepc/fd/Makefile])
+AC_CONFIG_FILES([lib/nextepc/gtp/Makefile])
+AC_CONFIG_FILES([lib/nextepc/Makefile])
 AC_CONFIG_FILES([lib/Makefile])
+
 AC_CONFIG_FILES([src/app/Makefile])
-AC_CONFIG_FILES([src/mme/Makefile])
-AC_CONFIG_FILES([src/hss/Makefile])
-AC_CONFIG_FILES([src/sgw/Makefile])
-AC_CONFIG_FILES([src/pgw/Makefile])
-AC_CONFIG_FILES([src/pcrf/Makefile])
+AC_CONFIG_FILES([src/amf/Makefile])
+AC_CONFIG_FILES([src/amf/http_server/Makefile])
+AC_CONFIG_FILES([src/smf/Makefile])
+AC_CONFIG_FILES([src/smf/http_server/Makefile])
+AC_CONFIG_FILES([src/upf/Makefile])
+
+AC_CONFIG_FILES([src/nextepc/hss/Makefile])
+AC_CONFIG_FILES([src/nextepc/pcrf/Makefile])
+AC_CONFIG_FILES([src/nextepc/Makefile])
 AC_CONFIG_FILES([src/Makefile])
-AC_CONFIG_FILES([support/config/nextepc.conf])
-AC_CONFIG_FILES([support/config/mme.conf])
-AC_CONFIG_FILES([support/config/sgw.conf])
-AC_CONFIG_FILES([support/config/pgw.conf])
+
+AC_CONFIG_FILES([support/config/free5gc.conf])
 AC_CONFIG_FILES([support/config/hss.conf])
 AC_CONFIG_FILES([support/config/pcrf.conf])
+AC_CONFIG_FILES([support/config/smf.conf])
+AC_CONFIG_FILES([support/config/amf.conf])
+AC_CONFIG_FILES([support/config/upf.conf])
 AC_CONFIG_FILES([support/config/Makefile])
-AC_CONFIG_FILES([support/freeDiameter/mme.conf])
-AC_CONFIG_FILES([support/freeDiameter/pgw.conf])
+AC_CONFIG_FILES([support/freeDiameter/amf.conf])
+AC_CONFIG_FILES([support/freeDiameter/smf.conf])
 AC_CONFIG_FILES([support/freeDiameter/hss.conf])
 AC_CONFIG_FILES([support/freeDiameter/pcrf.conf])
 AC_CONFIG_FILES([support/freeDiameter/Makefile])
-AC_CONFIG_FILES([support/systemd/nextepc-mmed.service])
-AC_CONFIG_FILES([support/systemd/nextepc-sgwd.service])
-AC_CONFIG_FILES([support/systemd/nextepc-pgwd.service])
+AC_CONFIG_FILES([support/systemd/free5gc-amfd.service])
 AC_CONFIG_FILES([support/systemd/nextepc-hssd.service])
 AC_CONFIG_FILES([support/systemd/nextepc-pcrfd.service])
+AC_CONFIG_FILES([support/systemd/free5gc-upfd.service])
 AC_CONFIG_FILES([support/systemd/Makefile])
-AC_CONFIG_FILES([support/logrotate/nextepc])
+AC_CONFIG_FILES([support/logrotate/free5gc])
 AC_CONFIG_FILES([support/logrotate/Makefile])
-AC_CONFIG_FILES([support/newsyslog/nextepc.conf])
+AC_CONFIG_FILES([support/newsyslog/free5gc.conf])
 AC_CONFIG_FILES([support/newsyslog/Makefile])
+AC_CONFIG_FILES([support/https/Makefile])
 AC_CONFIG_FILES([support/Makefile])
 AC_CONFIG_FILES([test/sample.conf])
 AC_CONFIG_FILES([test/sample-volte.conf])
+AC_CONFIG_FILES([test/free5gc.testngc.conf])
 AC_CONFIG_FILES([test/Makefile])
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
 
 echo "
-NextEPC configuration
+free5GC configuration
 --------------------
 version                 : ${PACKAGE_VERSION}
 host                    : ${host}
@@ -475,7 +493,7 @@ compiler                : ${CC}
 compiler flags          : ${CFLAGS} ${YAML_CFLAGS} ${MONGOC_CFLAGS} 
 linker flags            : ${LDFLAGS} ${LIBS} ${YAML_LIBS} ${MONGOC_LIBS}
 bin directory           : ${BIN_DIR}
-lib directory           : ${LIB_DIR}/nextepc
-config directory        : ${SYSCONF_DIR}/nextepc
-log directory           : ${LOCALSTATE_DIR}/log/nextepc
+lib directory           : ${LIB_DIR}/free5gc
+config directory        : ${SYSCONF_DIR}/free5gc
+log directory           : ${LOCALSTATE_DIR}/log/free5gc
 "

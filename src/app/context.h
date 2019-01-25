@@ -42,15 +42,18 @@ typedef struct _context_t {
             int nas;
             int gtpv2;
             int gtp;
+            int pfcp;
             int diameter;
+            int ngap;
+            int sbi;
         } trace;
     } logger;
 
     struct {
         /* Element */
         int no_hss;
-        int no_sgw;
-        int no_pgw;
+        int no_smf;
+        int no_upf;
         int no_pcrf;
 
         /* Network */

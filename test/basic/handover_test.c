@@ -5,7 +5,7 @@
 #include <mongoc.h>
 
 #include "app/context.h"
-#include "mme/mme_context.h"
+#include "amf/amf4g_context.h"
 #include "s1ap/s1ap_message.h"
 
 #include "testutil.h"
@@ -103,16 +103,16 @@ static void handover_test1(abts_case *tc, void *data)
       "\"__v\" : 0"
     "}";
 
-    mme_self()->mme_ue_s1ap_id = 16777689;
+    amf4g_self()->mme_ue_s1ap_id = 16777689;
 
-    /* Two eNB connects to MME */
+    /* Two eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     rv = tests1ap_enb_connect(&sock2);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB connects to SGW */
+    /* eNB connects to UPF */
     rv = testgtpu_enb_connect(&gtpu1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -326,14 +326,14 @@ static void handover_test1(abts_case *tc, void *data)
 
     mongoc_collection_destroy(collection);
 
-    /* Two eNB disonncect from MME */
+    /* Two eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     rv = tests1ap_enb_close(sock2);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB disonncect from SGW */
+    /* eNB disonncect from UPF */
     rv = testgtpu_enb_close(gtpu1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -354,7 +354,7 @@ static void handover_test2(abts_case *tc, void *data)
     int i;
     int msgindex = 10;
     enb_ue_t *enb_ue = NULL;
-    mme_ue_t *mme_ue = NULL;
+    amf4g_ue_t *amf4g_ue = NULL;
     c_uint32_t m_tmsi = 0;
 
     mongoc_collection_t *collection = NULL;
@@ -432,16 +432,16 @@ static void handover_test2(abts_case *tc, void *data)
       "\"__v\" : 0"
     "}";
 
-    mme_self()->mme_ue_s1ap_id = 33554627;
+    amf4g_self()->mme_ue_s1ap_id = 33554627;
 
-    /* Two eNB connects to MME */
+    /* Two eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     rv = tests1ap_enb_connect(&sock2);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB connects to SGW */
+    /* eNB connects to UPF */
     rv = testgtpu_enb_connect(&gtpu1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -586,9 +586,9 @@ static void handover_test2(abts_case *tc, void *data)
     /* Retreive M-TMSI */
     enb_ue = enb_ue_find_by_mme_ue_s1ap_id(33554628);
     d_assert(enb_ue, goto out,);
-    mme_ue = enb_ue->mme_ue;
-    d_assert(mme_ue, goto out,);
-    m_tmsi = mme_ue->guti.m_tmsi;
+    amf4g_ue = enb_ue->amf4g_ue;
+    d_assert(amf4g_ue, goto out,);
+    m_tmsi = amf4g_ue->guti.m_tmsi;
 
     /* Receive E-RAB Setup Request + 
      * Activate dedicated EPS bearer context request */
@@ -619,7 +619,7 @@ static void handover_test2(abts_case *tc, void *data)
     rv = tests1ap_enb_send(sock1, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* Receive MME configuration transfer */
+    /* Receive AMF configuration transfer */
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock2, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -631,7 +631,7 @@ static void handover_test2(abts_case *tc, void *data)
     rv = tests1ap_enb_send(sock2, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* Receive MME configuration transfer */
+    /* Receive AMF configuration transfer */
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock1, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -675,7 +675,7 @@ static void handover_test2(abts_case *tc, void *data)
     rv = tests1ap_enb_send(sock1, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* Receive MME Status Transfer */
+    /* Receive AMF Status Transfer */
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock2, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -701,7 +701,7 @@ static void handover_test2(abts_case *tc, void *data)
 
     /* Send Tracking Area Update Request */
     rv = tests1ap_build_tau_request(&sendbuf, 1,
-            0x000300, 0x000800, 0, m_tmsi, 4, 0, mme_ue->knas_int);
+            0x000300, 0x000800, 0, m_tmsi, 4, 0, amf4g_ue->knas_int);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock2, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -756,7 +756,7 @@ static void handover_test2(abts_case *tc, void *data)
     rv = tests1ap_enb_send(sock2, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* Receive MME Status Transfer */
+    /* Receive AMF Status Transfer */
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock1, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -854,14 +854,14 @@ out:
 
     mongoc_collection_destroy(collection);
 
-    /* Two eNB disonncect from MME */
+    /* Two eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     rv = tests1ap_enb_close(sock2);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB disonncect from SGW */
+    /* eNB disonncect from UPF */
     rv = testgtpu_enb_close(gtpu1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 

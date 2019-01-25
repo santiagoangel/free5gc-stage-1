@@ -32,8 +32,9 @@ const struct testlist alltests[] = {
     {test_security},
     {test_s1setup},
     {test_attach},
-    {test_volte},
-    {test_handover},
+    // {test_volte},
+    // {test_handover},
+    {test_ngsetup},
     {NULL},
 };
 
@@ -50,6 +51,8 @@ static void test_fd_logger_handler(enum fd_hook_type type, struct msg * msg,
 
 void test_terminate(void)
 {
+    printf("Freeing memory...\n");
+    core_sleep(9 * 1000 * 1000);
     testpacket_final();
     app_terminate();
 

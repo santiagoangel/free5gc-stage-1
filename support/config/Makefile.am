@@ -1,13 +1,13 @@
 configfiles = \
-	nextepc.conf \
-	mme.conf \
-	sgw.conf \
-	pgw.conf \
+	free5gc.conf \
 	hss.conf \
 	pcrf.conf \
+	upf.conf \
+	amf.conf \
+	smf.conf \
 	$(NULL)
 
-configdir = ${sysconfdir}/nextepc
+configdir = ${sysconfdir}/free5gc
 
 config_DATA = ${configfiles}
 

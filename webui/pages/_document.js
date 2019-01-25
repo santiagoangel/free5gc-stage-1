@@ -11,13 +11,13 @@ export default class MyDocument extends Document {
     return (
       <html>
         <Head>
-          <title>NextEPC</title>
+          <title>free5GC</title>
 
           <meta charSet="utf-8" />
           <meta httpEquiv="X-UA-Compatible" content="IE=edge,chrome=1" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
 
-          <meta name="author" content="NextEPC" />
+          <meta name="author" content="free5GC" />
           <meta name="description" content={description} />
 
           <link rel='icon' href='/static/favicon.ico'/>

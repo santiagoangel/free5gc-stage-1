@@ -5,8 +5,8 @@
 #include <mongoc.h>
 
 #include "app/context.h"
-#include "mme/mme_context.h"
-#include "mme/s1ap_build.h"
+#include "amf/amf4g_context.h"
+#include "amf/s1ap_build.h"
 #include "s1ap/s1ap_message.h"
 
 #include "testutil.h"
@@ -27,7 +27,7 @@ static void attach_test1(abts_case *tc, void *data)
     int i;
     int msgindex = 0;
     enb_ue_t *enb_ue = NULL;
-    mme_ue_t *mme_ue = NULL;
+    amf4g_ue_t *amf4g_ue = NULL;
     c_uint32_t m_tmsi = 0;
 
     c_uint8_t tmp[MAX_SDU_LEN];
@@ -49,8 +49,8 @@ static void attach_test1(abts_case *tc, void *data)
         "0002010000000153 12172c5949640125 006b000518000c00 00004900203311c6"
         "03c6a6d67f695e5a c02bb75b381b693c 3893a6d932fd9182 3544e3e79b";
     char *_emm_information = 
-        "000b403b00000300 000005c00100009d 000800020001001a 002524271f9b491e"
-        "030761430f10004e 0065007800740045 0050004347812072 11240563490100";
+        "000b403b00000300 000005c00100009d 000800020001001a 002524276e110349"
+        "030761430f100066 0072006500650035 0047004347911042 10144523490100";
 
     mongoc_collection_t *collection = NULL;
     bson_t *doc = NULL;
@@ -99,11 +99,11 @@ static void attach_test1(abts_case *tc, void *data)
 
     core_sleep(time_from_msec(300));
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB connects to SGW */
+    /* eNB connects to UPF */
     rv = testgtpu_enb_connect(&gtpu);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -149,7 +149,7 @@ static void attach_test1(abts_case *tc, void *data)
      * Send Initial-UE Message + Attach Request + PDN Connectivity        */
     core_sleep(time_from_msec(300));
 
-    mme_self()->mme_ue_s1ap_id = 16777372;
+    amf4g_self()->mme_ue_s1ap_id = 16777372;
     rv = tests1ap_build_initial_ue_msg(&sendbuf, msgindex);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
@@ -256,7 +256,7 @@ static void attach_test1(abts_case *tc, void *data)
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 #endif
     core_sleep(time_from_msec(300));
-
+#if 0
     rv = testgtpu_build_slacc_rs(&sendbuf, 0);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = testgtpu_enb_send(sendbuf);
@@ -266,6 +266,7 @@ static void attach_test1(abts_case *tc, void *data)
     rv = testgtpu_enb_read(gtpu, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     pkbuf_free(recvbuf);
+#endif
 
     /* Send GTP-U ICMP Packet */
     rv = testgtpu_build_ping(&sendbuf, "45.45.0.2", "45.45.0.1");
@@ -279,7 +280,7 @@ static void attach_test1(abts_case *tc, void *data)
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     pkbuf_free(recvbuf);
 
-#if LINUX == 1
+#if 1
     rv = testgtpu_build_ping(&sendbuf, "cafe::2", "cafe::1");
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = testgtpu_enb_send(sendbuf);
@@ -295,9 +296,9 @@ static void attach_test1(abts_case *tc, void *data)
     /* Retreive M-TMSI */
     enb_ue = enb_ue_find_by_mme_ue_s1ap_id(16777373);
     d_assert(enb_ue, goto out,);
-    mme_ue = enb_ue->mme_ue;
-    d_assert(mme_ue, goto out,);
-    m_tmsi = mme_ue->guti.m_tmsi;
+    amf4g_ue = enb_ue->amf4g_ue;
+    d_assert(amf4g_ue, goto out,);
+    m_tmsi = amf4g_ue->guti.m_tmsi;
 
     /*****************************************************************
      * Attach Request : Known GUTI, Integrity Protected, MAC Matched
@@ -311,7 +312,7 @@ static void attach_test1(abts_case *tc, void *data)
     /* Update NAS MAC */
     void snow_3g_f9(c_uint8_t* key, c_uint32_t count, c_uint32_t fresh,
             c_uint32_t dir, c_uint8_t *data, c_uint64_t length, c_uint8_t *out);
-    snow_3g_f9(mme_ue->knas_int, 7, 0, 0,
+    snow_3g_f9(amf4g_ue->knas_int, 7, 0, 0,
             sendbuf->payload + 24, (109 << 3), sendbuf->payload+20);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
@@ -456,11 +457,11 @@ static void attach_test1(abts_case *tc, void *data)
 
     core_sleep(time_from_msec(300));
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB disonncect from SGW */
+    /* eNB disonncect from UPF */
     rv = testgtpu_enb_close(gtpu);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -478,11 +479,11 @@ out:
 
     core_sleep(time_from_msec(300));
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB disonncect from SGW */
+    /* eNB disonncect from UPF */
     rv = testgtpu_enb_close(gtpu);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 }
@@ -590,7 +591,7 @@ static void attach_test2(abts_case *tc, void *data)
 
     core_sleep(time_from_msec(300));
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -653,7 +654,7 @@ static void attach_test2(abts_case *tc, void *data)
      * Send Initial-UE Message + Attach Request + PDN Connectivity  */
     core_sleep(time_from_msec(300));
 
-    mme_self()->mme_ue_s1ap_id = 0;
+    amf4g_self()->mme_ue_s1ap_id = 0;
     rv = tests1ap_build_initial_ue_msg(&sendbuf, msgindex);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
@@ -843,7 +844,7 @@ static void attach_test2(abts_case *tc, void *data)
 
     mongoc_collection_destroy(collection);
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 }
@@ -860,7 +861,7 @@ static void attach_test3(abts_case *tc, void *data)
     int i;
     int msgindex = 6;
     enb_ue_t *enb_ue = NULL;
-    mme_ue_t *mme_ue = NULL;
+    amf4g_ue_t *amf4g_ue = NULL;
     c_uint32_t m_tmsi = 0;
 
     c_uint8_t tmp[MAX_SDU_LEN];
@@ -887,8 +888,8 @@ static void attach_test3(abts_case *tc, void *data)
         "05ff9c6791b8503a 032c6effa7";
 
     char *_emm_information =
-        "000b403b00000300 000005c0020000c8 000800020002001a 002524276782702a"
-        "030761430f10004e 0065007800740045 0050004347812072 11941563490100";
+        "000b403b00000300 000005c0020000c8 000800020002001a 00252427011b92c8"
+        "030761430f100066 0072006500650035 0047004347911042 10240023490100";
 
     char *_ue_context_release_command = 
         "0017"
@@ -941,7 +942,7 @@ static void attach_test3(abts_case *tc, void *data)
 
     core_sleep(time_from_msec(300));
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -988,7 +989,7 @@ static void attach_test3(abts_case *tc, void *data)
      * Send Initial-UE Message + Attach Request + PDN Connectivity  */
     core_sleep(time_from_msec(300));
 
-    mme_self()->mme_ue_s1ap_id = 33554631;
+    amf4g_self()->mme_ue_s1ap_id = 33554631;
     rv = tests1ap_build_initial_ue_msg(&sendbuf, msgindex);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
@@ -1080,9 +1081,16 @@ static void attach_test3(abts_case *tc, void *data)
     /* Retreive M-TMSI */
     enb_ue = enb_ue_find_by_mme_ue_s1ap_id(33554632);
     d_assert(enb_ue, goto out,);
-    mme_ue = enb_ue->mme_ue;
-    d_assert(mme_ue, goto out,);
-    m_tmsi = mme_ue->guti.m_tmsi;
+    amf4g_ue = enb_ue->amf4g_ue;
+    d_assert(amf4g_ue, goto out,);
+    m_tmsi = amf4g_ue->guti.m_tmsi;
+
+    /* Send eNB CP relocation indication */
+    rv = tests1ap_build_enb_cp_relocation_indication(&sendbuf, enb_ue->enb_ue_s1ap_id);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    rv = tests1ap_enb_send(sock, sendbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    
 
     /* Send UE Context Release Request */
     rv = tests1ap_build_ue_context_release_request(&sendbuf, msgindex);
@@ -1101,12 +1109,14 @@ static void attach_test3(abts_case *tc, void *data)
     pkbuf_free(recvbuf);
 
     /* Send UE Context Release Complete */
+    
     rv = tests1ap_build_ue_context_release_complete(&sendbuf, msgindex);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     /* Send Service Request */
+    
     core_sleep(time_from_msec(300));
 
     rv = tests1ap_build_service_request(&sendbuf, 0x000400, 4, 0xd4b8, m_tmsi);
@@ -1115,12 +1125,14 @@ static void attach_test3(abts_case *tc, void *data)
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     /* Receive Initial Context Setup Request */
+    
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     pkbuf_free(recvbuf);
 
     /* Send UE Capability Info Indication */
+    
     rv = tests1ap_build_ue_capability_info_indication(&sendbuf, msgindex+1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
@@ -1129,6 +1141,7 @@ static void attach_test3(abts_case *tc, void *data)
     core_sleep(time_from_msec(300));
 
     /* Send Initial Context Setup Response */
+    
     rv = tests1ap_build_initial_context_setup_response(&sendbuf,
             33554633, 4, 5, 1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -1138,19 +1151,22 @@ static void attach_test3(abts_case *tc, void *data)
     core_sleep(time_from_msec(300));
 
     /* Send TAU Request */
+    
     rv = tests1ap_build_tau_request(&sendbuf, 0,
-            0, 0x003600, 1, m_tmsi, 7, 0xe73ce7c, mme_ue->knas_int);
+            0, 0x003600, 1, m_tmsi, 7, 0xe73ce7c, amf4g_ue->knas_int);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     /* Receive TAU Accept */
+    
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     pkbuf_free(recvbuf);
 
     /* Send Initial Context Setup Response */
+    
     rv = tests1ap_build_initial_context_setup_response(&sendbuf,
             33554634, 54, 5, 1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -1158,34 +1174,101 @@ static void attach_test3(abts_case *tc, void *data)
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     core_sleep(time_from_msec(300));
+    
+    
+
+    ///////////// YEEEEEEEEEEEE
+    
+    rv = tests1ap_build_e_rab_modification_indication(&sendbuf, amf4g_ue->enb_ue->mme_ue_s1ap_id, amf4g_ue->enb_ue->enb_ue_s1ap_id);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    rv = tests1ap_enb_send(sock, sendbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+
+    recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
+    rv = tests1ap_enb_read(sock, recvbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    pkbuf_free(recvbuf);
+    ////////////
+
+    
+
 
     /* Send TAU Request */
+    
     rv = tests1ap_build_tau_request(&sendbuf, 0,
-            0, 0x002600, 0, m_tmsi, 8, 0x972dc6f8, mme_ue->knas_int);
+            0, 0x002600, 0, m_tmsi, 8, 0x972dc6f8, amf4g_ue->knas_int);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     /* Receive TAU Accept */
+    
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     pkbuf_free(recvbuf);
 
     /* Receive UE Context Release Command */
+    
     recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
     rv = tests1ap_enb_read(sock, recvbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     pkbuf_free(recvbuf);
 
     /* Send UE Context Release Complete */
+    
     rv = tests1ap_build_ue_context_release_complete(&sendbuf, msgindex+1);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
     core_sleep(time_from_msec(300));
+    
+    // added by EvanHuang
+        /*rv = tests1ap_build_e_rab_release_indication(&sendbuf, 0, 0x003600);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);*/
+        /*rv = tests1ap_build_ue_context_modification_indication(&sendbuf, 0, 0x003600);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);*/
+        /*rv = tests1ap_build_ue_context_suspend_request(&sendbuf, 0, 0x002600);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);*/
+        /*rv = tests1ap_build_ue_context_resume_request(&sendbuf, 0, 0x002600);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);*/
+        /*rv = tests1ap_build_nas_delivery_indication(&sendbuf, 0, 0x002600);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);*/
+    /*S1AP_M_TMSI_t *a = NULL;
+    served_gummei_t *served_gummei = &amf4g_self()->served_gummei[0];
+    S1AP_MME_Code_t *MME_Code = (S1AP_MME_Code_t *)core_calloc(1, sizeof(S1AP_MME_Code_t));
+    s1ap_uint8_to_OCTET_STRING(served_gummei->mme_code[j], MME_Code);
+    s1ap_uint32_to_OCTET_STRING(m_TMSI, a);*/
+        /*rv = tests1ap_build_retrieve_ue_information(&sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);*/
+    /*rv = tests1ap_build_nas_non_delivery_indication(&sendbuf, 0, 0x002600);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+        rv = tests1ap_enb_send(sock, sendbuf);
+        ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    recvbuf = pkbuf_alloc(0, MAX_SDU_LEN);
+    rv = tests1ap_enb_read(sock, recvbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    pkbuf_free(recvbuf);*/
+
+        
+    // added by EvanHuang
+
+
 out:
+    
     doc = BCON_NEW("imsi", BCON_UTF8("001010123456797"));
     ABTS_PTR_NOTNULL(tc, doc);
     ABTS_TRUE(tc, mongoc_collection_remove(collection,
@@ -1194,7 +1277,8 @@ out:
 
     mongoc_collection_destroy(collection);
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
+    
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -1265,11 +1349,11 @@ static void attach_test4(abts_case *tc, void *data)
 
     core_sleep(time_from_msec(300));
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB connects to SGW */
+    /* eNB connects to UPF */
     rv = testgtpu_enb_connect(&gtpu);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -1315,7 +1399,7 @@ static void attach_test4(abts_case *tc, void *data)
      * Send Initial-UE Message + Attach Request + PDN Connectivity        */
     core_sleep(time_from_msec(300));
 
-    mme_self()->mme_ue_s1ap_id = 0;
+    amf4g_self()->mme_ue_s1ap_id = 0;
     rv = tests1ap_build_initial_ue_msg(&sendbuf, msgindex);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
     rv = tests1ap_enb_send(sock, sendbuf);
@@ -1391,11 +1475,11 @@ static void attach_test4(abts_case *tc, void *data)
 
     mongoc_collection_destroy(collection);
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
-    /* eNB disonncect from SGW */
+    /* eNB disonncect from UPF */
     rv = testgtpu_enb_close(gtpu);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 }
@@ -1411,7 +1495,7 @@ static void attach_test5(abts_case *tc, void *data)
     int i;
     int msgindex = 12;
     enb_ue_t *enb_ue = NULL;
-    mme_ue_t *mme_ue = NULL;
+    amf4g_ue_t *amf4g_ue = NULL;
     c_uint32_t m_tmsi = 0;
 
     mongoc_collection_t *collection = NULL;
@@ -1461,7 +1545,7 @@ static void attach_test5(abts_case *tc, void *data)
 
     core_sleep(time_from_msec(300));
 
-    /* eNB connects to MME */
+    /* eNB connects to AMF */
     rv = tests1ap_enb_connect(&sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
@@ -1502,7 +1586,7 @@ static void attach_test5(abts_case *tc, void *data)
     core_sleep(time_from_msec(300));
 
     /* Send Service request */
-    mme_self()->mme_ue_s1ap_id = 0;
+    amf4g_self()->mme_ue_s1ap_id = 0;
     rv = tests1ap_build_service_request(&sendbuf,
             0x40072c, 17, 0x9551, 0x12345678);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
@@ -1609,9 +1693,24 @@ static void attach_test5(abts_case *tc, void *data)
     /* Retreive M-TMSI */
     enb_ue = enb_ue_find_by_mme_ue_s1ap_id(2);
     d_assert(enb_ue, goto out,);
-    mme_ue = enb_ue->mme_ue;
-    d_assert(mme_ue, goto out,);
-    m_tmsi = mme_ue->guti.m_tmsi;
+    amf4g_ue = enb_ue->amf4g_ue;
+    d_assert(amf4g_ue, goto out,);
+    m_tmsi = amf4g_ue->guti.m_tmsi;
+
+    
+
+
+    /* Send eNB direct information transfer */
+    rv = tests1ap_build_enb_direct_information_transfer(&sendbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    rv = tests1ap_enb_send(sock, sendbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+
+    
+    rv = tests1ap_build_retrieve_ue_information(&sendbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
+    rv = tests1ap_enb_send(sock, sendbuf);
+    ABTS_INT_EQUAL(tc, CORE_OK, rv);
 
 #if 0
     rv = tests1ap_build_s1_reset(&sendbuf, 0);
@@ -1744,7 +1843,7 @@ out:
 
     mongoc_collection_destroy(collection);
 
-    /* eNB disonncect from MME */
+    /* eNB disonncect from AMF */
     rv = tests1ap_enb_close(sock);
     ABTS_INT_EQUAL(tc, CORE_OK, rv);
 }

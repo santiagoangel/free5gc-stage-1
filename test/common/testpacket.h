@@ -5,6 +5,7 @@
 #include "core_pkbuf.h"
 
 #include "s1ap/s1ap_message.h"
+#include "ngap/ngap_message.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,6 +60,7 @@ CORE_DECLARE(status_t) tests1ap_build_e_rab_setup_response(
         pkbuf_t **pkbuf, 
         c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id,
         c_uint8_t ebi, c_uint32_t teid);
+CORE_DECLARE(status_t) tests1ap_build_e_rab_modification_indication(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
 CORE_DECLARE(status_t) tests1ap_build_e_rab_modify_response(
         pkbuf_t **pkbuf, int i);
 CORE_DECLARE(status_t) tests1ap_build_e_rab_release_response(
@@ -101,7 +103,31 @@ CORE_DECLARE(status_t) testgtpu_enb_send(pkbuf_t *sendbuf);
 CORE_DECLARE(status_t) testgtpu_build_ping(pkbuf_t **sendbuf,
         const char *src_ip, const char *dst_ip);
 CORE_DECLARE(status_t) testgtpu_build_slacc_rs(pkbuf_t **sendbuf, int i);
+CORE_DECLARE(status_t) tests1ap_build_e_rab_release_indication(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
+CORE_DECLARE(status_t) tests1ap_build_ue_context_modification_indication(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
+CORE_DECLARE(status_t) tests1ap_build_ue_context_suspend_request(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
+CORE_DECLARE(status_t) tests1ap_build_ue_context_resume_request(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
+CORE_DECLARE(status_t) tests1ap_build_nas_delivery_indication(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
+CORE_DECLARE(status_t) tests1ap_build_nas_non_delivery_indication(pkbuf_t **pkbuf, c_uint32_t mme_ue_s1ap_id, c_uint32_t enb_ue_s1ap_id);
+CORE_DECLARE(status_t) tests1ap_build_retrieve_ue_information(pkbuf_t **pkbuf);
 
+CORE_DECLARE(status_t) tests1ap_build_enb_direct_information_transfer(
+    pkbuf_t **s1apbuf);
+
+CORE_DECLARE(status_t) tests1ap_build_enb_cp_relocation_indication(pkbuf_t **pkbuf, 
+        c_uint32_t enb_ue_s1ap_id);
+
+CORE_DECLARE(status_t) testngap_ran_connect(sock_id *new);
+CORE_DECLARE(status_t) testngap_ran_close(sock_id id);
+CORE_DECLARE(status_t) testngap_ran_send(sock_id id, pkbuf_t *sendbuf);
+CORE_DECLARE(status_t) testngap_ran_read(sock_id id, pkbuf_t *recvbuf);
+
+CORE_DECLARE(status_t) testngap_build_setup_req(
+        pkbuf_t **pkbuf, NGAP_NgENB_ID_PR present, c_uint32_t enb_id);
+CORE_DECLARE(status_t)  ngap_build_initial_context_setup_failure(
+        pkbuf_t **pkbuf, c_uint32_t amf_ue_ngap_id, c_uint32_t ran_ue_nagp_id);
+CORE_DECLARE(status_t)  testngap_build_initial_context_setup_response(
+        pkbuf_t **pkbuf, c_uint32_t amf_ue_ngap_id, c_uint32_t ran_ue_ngap_id);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
