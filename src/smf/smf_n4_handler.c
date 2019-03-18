@@ -101,6 +101,12 @@ void smf_n4_handle_association_setup_response(
         {
             d_info("association_setup_response cause: %d", pfcp_cause_get_name(cause));
         }
+
+        if (rsp->user_plane_ip_resource_information.presence) {
+            memcpy(&xact->gnode->user_plane_info, rsp->user_plane_ip_resource_information.data,
+                    sizeof(pfcp_user_plane_ip_resource_information_t));
+        }
+
     } while(0);
     
     if (xact)

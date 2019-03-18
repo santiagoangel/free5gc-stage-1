@@ -218,6 +218,23 @@ ED2(
 )
 } __attribute__ ((packed)) pfcp_downlink_data_service_information_t;
 
+typedef struct _pfcp_user_plane_ip_resource_information_t {
+ED6(c_uint8_t       spare1:1;,
+    c_uint8_t       ASSOSI:1;,
+    c_uint8_t       ASSONI:1;,
+    c_uint8_t       TEIDRI:3;,
+    c_uint8_t       V6:1;,
+    c_uint8_t       V4:1;)
+
+    c_uint8_t       teid_range:8;
+    c_uint32_t      addr;
+    c_uint8_t       addr6[IPV6_LEN];
+    c_uint8_t       network_instance;
+ED2(c_uint8_t       spare2:4;,
+    c_uint8_t       source_interface:4;
+)
+} __attribute__ ((packed)) pfcp_user_plane_ip_resource_information_t;
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

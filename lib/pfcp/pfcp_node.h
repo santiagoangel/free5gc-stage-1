@@ -30,7 +30,7 @@ typedef struct _pfcp_node_t {
     sock_id         sock;           /* Socket instance */
     ip_t            ip;             /* Socket Address */
 
-    list_t          local_list;    
+    list_t          local_list;
     list_t          remote_list;
 #define PFCP_NODE_ST_NULL           0
 #define PFCP_NODE_ST_ASSOCIATED     1    
@@ -41,6 +41,7 @@ typedef struct _pfcp_node_t {
         c_uint8_t   up_function_features;
         c_uint8_t   cp_function_features;
     };
+    pfcp_user_plane_ip_resource_information_t user_plane_info;
 } pfcp_node_t;
 
 CORE_DECLARE(status_t) pfcp_node_init(void);

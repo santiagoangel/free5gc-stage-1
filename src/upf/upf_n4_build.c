@@ -211,6 +211,21 @@ status_t upf_n4_build_association_setup_response(
         rsp->up_function_features.presence = 0;
     }
     
+    pfcp_user_plane_ip_resource_information_t up_info;
+
+    memset(&up_info, 0, sizeof(pfcp_user_plane_ip_resource_information_t));
+
+    up_info.V4 = upf_self()->gtpu_addr ? 1 : 0;
+    up_info.V6 = upf_self()->gtpu_addr6 ? 1 : 0;
+    if (up_info.V4)
+        up_info.addr = upf_self()->gtpu_addr->sin.sin_addr.s_addr;
+    if (up_info.V6)
+        memcpy(up_info.addr6, upf_self()->gtpu_addr->sin6.sin6_addr.s6_addr, IPV6_LEN);
+
+    rsp->user_plane_ip_resource_information.presence = 1;
+    rsp->user_plane_ip_resource_information.data = &up_info;
+    rsp->user_plane_ip_resource_information.len = sizeof(pfcp_user_plane_ip_resource_information_t);
+
     pfcp_message.h.type = type;
     rv = pfcp_build_msg(pkbuf, &pfcp_message);
     d_assert(rv == CORE_OK, return CORE_ERROR, "pfcp build failed");
