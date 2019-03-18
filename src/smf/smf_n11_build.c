@@ -195,12 +195,25 @@ status_t smf_n11_build_create_session_response(
     createSession.ebi = bearer->ebi;
 
     /* S1U TEID */
-    s1_u_enodeb_addr = sess->upf_node->sa_list;
-    gtp_sockaddr_to_f_teid(
-            s1_u_enodeb_addr, NULL, &s1_u_enodeb_f_teid, 
-            &f_teid_len);
-    gtp_f_teid_to_ip(&s1_u_enodeb_f_teid, &createSession.upf_ip);
-
+    if (sess->upf_node->user_plane_info.V4) {
+        ip_t v4ip;
+        memset(&v4ip, 0, sizeof(ip_t));
+        v4ip.ipv4 = 1;
+        v4ip.addr = sess->upf_node->user_plane_info.addr;
+        memcpy(&createSession.upf_ip, &v4ip, sizeof(ip_t));
+    } else if (sess->upf_node->user_plane_info.V6) {
+        ip_t v6ip;
+        v6ip.ipv6 = 1;
+        memset(&v6ip, 0, sizeof(ip_t));
+        memcpy(v6ip.addr6, sess->upf_node->user_plane_info.addr6, IPV6_LEN);
+        memcpy(&createSession.upf_ip, &v6ip, sizeof(ip_t));
+    } else {
+        s1_u_enodeb_addr = sess->upf_node->sa_list;
+        gtp_sockaddr_to_f_teid(
+                s1_u_enodeb_addr, NULL, &s1_u_enodeb_f_teid, 
+                &f_teid_len);
+        gtp_f_teid_to_ip(&s1_u_enodeb_f_teid, &createSession.upf_ip);
+    }
     JSONTRANSFORM_StToJs_create_session_response(&createSession, j_createSession);
     
     string = cJSON_Print(j_createSession);
