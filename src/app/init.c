@@ -101,9 +101,18 @@ status_t app_log_pid(const char *pid_path)
 
     if (pid_path == NULL)
     {
-        snprintf(default_pid_path, sizeof(default_pid_path),
+        if (strcmp(app_name, "hss") == 0 || strcmp(app_name, "pcrf") == 0)
+        {
+            snprintf(default_pid_path, sizeof(default_pid_path),
+                "%snextepc-%sd/pid", DEFAULT_RUNTIME_DIR_PATH, app_name);
+            pid_path = default_pid_path;
+        }
+        else
+        {
+            snprintf(default_pid_path, sizeof(default_pid_path),
                 "%sfree5gc-%sd/pid", DEFAULT_RUNTIME_DIR_PATH, app_name);
-        pid_path = default_pid_path;
+            pid_path = default_pid_path;
+        }
     }
 
     mypid = getpid();
