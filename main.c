@@ -158,6 +158,7 @@ int main(int argc, char *argv[])
     signal_thread(check_signal);
 
     d_info("free5GC daemon terminating...");
+    app_remove_pid(pid_path);
 
     return EXIT_SUCCESS;
 }
