@@ -16,6 +16,7 @@ static status_t app_logger_init();
 static status_t app_logger_final();
 static status_t app_logger_start();
 static status_t app_logger_stop();
+static void get_default_pid_path(char *pid_path, int max_len);
 
 status_t app_will_initialize(const char *config_path, const char *log_path)
 {
@@ -101,8 +102,7 @@ status_t app_log_pid(const char *pid_path)
 
     if (pid_path == NULL)
     {
-        snprintf(default_pid_path, sizeof(default_pid_path),
-                "%sfree5gc-%sd/pid", DEFAULT_RUNTIME_DIR_PATH, app_name);
+        get_default_pid_path(default_pid_path, MAX_FILEPATH_LEN);
         pid_path = default_pid_path;
     }
 
@@ -128,6 +128,34 @@ status_t app_log_pid(const char *pid_path)
     saved_pid = mypid;
 
     d_print("  PID[%" C_PID_T_FMT "] : '%s'\n", saved_pid, pid_path);
+
+    return CORE_OK;
+}
+
+status_t app_remove_pid(const char *pid_path)
+{
+    file_info_t finfo;
+    char default_pid_path[MAX_FILEPATH_LEN];
+
+    if (pid_path == NULL)
+    {
+        get_default_pid_path(default_pid_path, MAX_FILEPATH_LEN);
+        pid_path = default_pid_path;
+    }
+
+    if (file_stat(&finfo, pid_path, FILE_INFO_MTIME) != CORE_OK)
+    {
+        d_warn("CHECK PERMISSION of Installation Directory...");
+        d_warn("Cannot read PID file:`%s`", pid_path);
+        return CORE_OK;
+    }
+
+    if (file_remove(pid_path) != CORE_OK)
+    {
+        d_error("CHECK PERMISSION of Installation Directory...");
+        d_error("Cannot remove PID file:`%s`", pid_path);
+        return CORE_ERROR;
+    }
 
     return CORE_OK;
 }
@@ -254,3 +282,16 @@ static status_t app_logger_final()
     return CORE_OK;
 }
 
+static void get_default_pid_path(char *pid_path, int max_len)
+{
+    if (strcmp(app_name, "hss") == 0 || strcmp(app_name, "pcrf") == 0)
+    {
+        snprintf(pid_path, max_len, "%snextepc-%sd/pid", 
+            DEFAULT_RUNTIME_DIR_PATH, app_name);
+    }
+    else
+    {
+        snprintf(pid_path, max_len, "%sfree5gc-%sd/pid", 
+            DEFAULT_RUNTIME_DIR_PATH, app_name);
+    }
+}
