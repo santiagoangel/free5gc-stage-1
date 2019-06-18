@@ -31,29 +31,29 @@ char* uint_to_buffer(char* conv, c_uint8_t* input, int len){
 }
 
 void add_uint8_to_json(cJSON* json_key, c_uint8_t value, const char* key){
-    char str[10];
-    bzero(str, 10);
+    char str[4];
+    bzero(str, 4);
     sprintf(str, "%u", value);
     cJSON_AddStringToObject(json_key, key, str);
     return;
 }
 void add_uint16_to_json(cJSON* json_key, c_uint16_t value, const char* key){
-    char str[10];
-    bzero(str, 10);
+    char str[6];
+    bzero(str, 6);
     sprintf(str, "%u", value);
     cJSON_AddStringToObject(json_key, key, str);
     return;
 }
 void add_uint32_to_json(cJSON* json_key, c_uint32_t value, const char* key){
-    char str[10];
-    bzero(str, 10);
+    char str[11];
+    bzero(str, 11);
     sprintf(str, "%u", value);
     cJSON_AddStringToObject(json_key, key, str);
     return;
 }
 void add_uint64_to_json(cJSON* json_key, c_uint64_t value, const char* key){
-    char str[20];
-    bzero(str, 20);
+    char str[21];
+    bzero(str, 21);
     sprintf(str, "%lu", value);
     cJSON_AddStringToObject(json_key, key, str);
     return;
