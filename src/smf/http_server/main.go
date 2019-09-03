@@ -10,6 +10,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"flag"
 	"log"
 	"net/http"
@@ -17,6 +18,8 @@ import (
 
 	"golang.org/x/net/http2"
 	"golang.org/x/sys/unix"
+
+	"os"
 )
 
 var (
@@ -29,9 +32,11 @@ var (
 	port     uint
 	certFile string
 	keyFile  string
+	keylog   bool
 )
 
 func init() {
+	keylog = false
 	flag.StringVar(&ip, "ip", "localhost", "ip address of sbi server")
 	flag.UintVar(&port, "port", 8080, "port")
 	flag.StringVar(&certFile, "cert", sysConfigPath+"/"+packageName+"/https/smf.cert", "TLS certificate")
@@ -44,8 +49,23 @@ func main() {
 		log.Fatal("Prctl Fail")
 		return
 	}
+
+	var keylogFile *os.File
+	var err error
+	if keylog {
+		keylogFile, err = os.OpenFile("smfkey.log", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			log.Println("smfkey.log")
+		}
+	}
+
 	var server http.Server
 	server.Addr = ip + ":" + strconv.Itoa(int(port))
+	if keylog && keylogFile != nil {
+		server.TLSConfig = &tls.Config{
+			KeyLogWriter: keylogFile,
+		}	
+	}
 	router := NewRouter()
 	http.Handle("/", router)
 
