@@ -148,8 +148,8 @@ sudo apt-get -y install autoconf libtool gcc pkg-config git flex bison libsctp-d
 
 Git clone and compile
 ```bash
-git clone https://bitbucket.org/nctu_5g/free5gc.git
-cd free5gc
+git clone https://bitbucket.org/nctu_5g/free5gc-stage-1.git
+cd free5gc-stage-1
 autoreconf -iv
 ./configure --prefix=`pwd`/install
 make -j `nproc`
